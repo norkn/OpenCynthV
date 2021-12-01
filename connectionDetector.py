@@ -45,12 +45,12 @@ def collectIntersections(perimeter_border):
     for p in perimeter_border:
             
         i += 1
-        count += 1
             
         if(isCloseToBlack(p)):
                
             isOnIntersection = True
             avg_coord += i
+            count += 1
                 
         else:
                 
@@ -58,9 +58,15 @@ def collectIntersections(perimeter_border):
                     
                 isOnIntersection = False
                 avg_coord /= count
+                avg_coord -= len(perimeter_border) / 2
                 intersections.append(avg_coord)
                 avg_coord = 0
                 count = 0
+                
+    if isOnIntersection:    #if the side ends on an intersection, we still need to register it
+        avg_coord /= count
+        avg_coord -= len(perimeter_border) / 2
+        intersections.append(avg_coord)
                 
     return intersections
 
@@ -102,10 +108,10 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         #choose most plausible intersection, by slope continuation or color injection   
         slopes = []
         
-        for h in intersections_left   : slopes.append( np.array([-r   , h - y], dtype=np.int32) )
-        for w in intersections_top    : slopes.append( np.array([w - x, r    ], dtype=np.int32) )
-        for h in intersections_right  : slopes.append( np.array([r    , h - y], dtype=np.int32) )
-        for w in intersections_bottom : slopes.append( np.array([w - x, -r   ], dtype=np.int32) )
+        for dy in intersections_left   : slopes.append( np.array([ -r, dy ], dtype=np.int32) )
+        for dx in intersections_top    : slopes.append( np.array([ dx, -r ], dtype=np.int32) )
+        for dy in intersections_right  : slopes.append( np.array([  r, dy ], dtype=np.int32) )
+        for dx in intersections_bottom : slopes.append( np.array([ dx,  r ], dtype=np.int32) )
         
         last_slope = closestSlope(last_slope, slopes)
         current_point += last_slope   #last_slope is still current slope at this point but already called last_slope for next step
