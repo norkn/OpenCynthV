@@ -80,16 +80,6 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
     last_slope = np.array([1, 0], dtype=np.int32)
     
     while(not isEndpoint(current_point)):
-        
-        ###########begin visualization for debugging###############
-        print('step')
-        cv2.rectangle(img, tuple(current_point - (r, r)), tuple(current_point + (r, r)), (0, 255, 0))
-        cv2.circle(img, tuple(current_point), 2, (0,0,255), thickness = -1)
-        cv2.imshow('Connection Detection', img)
-        if cv2.waitKey(1000) != -1:
-            print('end')
-            break
-        ###########end   visualization for debugging###############
     
         #look at pixels in circle or square of certain radius around current point 
         x = current_point[0]
@@ -115,6 +105,25 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         for dx in intersections_bottom : slopes.append( np.array([ dx,  r ], dtype=np.int32) )
         
         last_slope = closestSlope(last_slope, slopes)
+        
+        ###########begin visualization for debugging###############
+        print('step')
+        new_img = img.copy()
+        
+        cv2.rectangle(new_img, tuple(current_point - (r, r)), tuple(current_point + (r, r)), (0, 255, 0))            
+                 
+        cv2.circle(new_img, tuple(current_point), 2, (0,0,255), thickness = -1)
+        
+        for s in slopes:
+            cv2.circle(new_img, tuple(current_point + s), 2, (0,0,255), thickness = -1)
+            
+        cv2.circle(new_img, tuple(current_point + last_slope), 2, (255,100,90), thickness = -1)
+        
+        cv2.imshow('Connection Detection', new_img)
+        if cv2.waitKey(0) != -1:
+            if cv2.waitKey(150) != -1: break
+        ###########end   visualization for debugging###############
+        
         current_point += last_slope   #last_slope is still current slope at this point but already called last_slope for next step
         
     
@@ -132,7 +141,4 @@ traceConnection(erosion, 20, 115, 135, 50, 6)
 #color threshold
 #morphological filtering
 
-
-
-cv2.waitKey(0)
 cv2.destroyAllWindows()
