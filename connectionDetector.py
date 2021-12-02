@@ -7,7 +7,8 @@ def isEndpoint(p):
 
 
 def isCloseToBlack(c):
-    threshold = 2
+    
+    threshold = 15
     color_magnitude = math.sqrt(c[0] ** 2 + c[1] ** 2 + c[2] ** 2)
     return color_magnitude < threshold
     
@@ -122,7 +123,9 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
     
 img = cv2.imread('connections_test.jpg', cv2.IMREAD_COLOR)
 cv2.namedWindow('Connection Detection')
-traceConnection(img, 20, 115, 135, 50, 8)
+kernel = np.ones((3, 3), np.uint8)
+erosion = cv2.dilate(img, kernel, iterations = 1)
+traceConnection(erosion, 20, 115, 135, 50, 6)
 #cv2.imshow('Connection Detection', img)
 
 #connection extraction
