@@ -129,13 +129,17 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
     
     return current_point
 
+def mouseCallback(event, x, y, flags, param):
+    
+    if event == cv2.EVENT_LBUTTONDOWN: traceConnection(erosion, x, y, 135, 50, 6)
     
 img = cv2.imread('connections_test.jpg', cv2.IMREAD_COLOR)
 cv2.namedWindow('Connection Detection')
+cv2.setMouseCallback('Connection Detection', mouseCallback)
+
 kernel = np.ones((3, 3), np.uint8)
 erosion = cv2.dilate(img, kernel, iterations = 1)
-traceConnection(erosion, 20, 115, 135, 50, 6)
-#cv2.imshow('Connection Detection', img)
+cv2.imshow('Connection Detection', img)
 
 #connection extraction
 #color threshold
