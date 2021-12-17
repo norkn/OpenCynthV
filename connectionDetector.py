@@ -1,9 +1,12 @@
 import math
 import numpy as np
 import cv2
-    
+  
+
+  
 def isEndpoint(p):
     return False
+
 
 
 def isCloseToBlack(c):
@@ -11,7 +14,8 @@ def isCloseToBlack(c):
     threshold = 15
     color_magnitude = math.sqrt(c[0] ** 2 + c[1] ** 2 + c[2] ** 2)
     return color_magnitude < threshold
-    
+  
+  
 
 def closestSlope(slope, slopes):
     
@@ -85,10 +89,10 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         x = current_point[0]
         y = current_point[1]
         
-        perimeter_left   = img[ y - r : y + r,   x - r         ]
-        perimeter_top    = img[ y - r        ,   x - r : x + r ]
-        perimeter_right  = img[ y - r : y + r,   x + r         ]
-        perimeter_bottom = img[ y + r        ,   x - r : x + r ]
+        perimeter_left   = img[ y-r : y+r,   x-r       ]
+        perimeter_top    = img[ y-r      ,   x-r : x+r ]
+        perimeter_right  = img[ y-r : y+r,   x+r       ]
+        perimeter_bottom = img[ y+r      ,   x-r : x+r ]
         
         #iterate around perimeter and register intersections
         intersections_left   = collectIntersections(perimeter_left)
@@ -125,8 +129,7 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         ###########end   visualization for debugging###############
         
         current_point += last_slope   #last_slope is still current slope at this point but already called last_slope for next step
-        
-    
+          
     return current_point
 
 def mouseCallback(event, x, y, flags, param):
@@ -141,8 +144,5 @@ kernel = np.ones((3, 3), np.uint8)
 erosion = cv2.dilate(img, kernel, iterations = 1)
 cv2.imshow('Connection Detection', img)
 
-#connection extraction
-#color threshold
-#morphological filtering
 
 cv2.destroyAllWindows()
