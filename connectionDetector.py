@@ -12,7 +12,7 @@ def isEndpoint(p):
 def isCloseToBlack(c):
     
     threshold = 15
-    color_magnitude = math.sqrt(c[0] ** 2 + c[1] ** 2 + c[2] ** 2)
+    color_magnitude = c #math.sqrt(c[0] ** 2 + c[1] ** 2 + c[2] ** 2)
     return color_magnitude < threshold
   
   
@@ -133,16 +133,35 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
     return current_point
 
 def mouseCallback(event, x, y, flags, param):
+    global video, isRunning
     
-    if event == cv2.EVENT_LBUTTONDOWN: traceConnection(erosion, x, y, 135, 50, 6)
+    ret, img = video.read()
+    #img = processImageForSlopeFollowing(img)
+    img = processImageForColorInjection(img)
+    if event == cv2.EVENT_LBUTTONDOWN:
+        traceConnection(img, x, y, 135, 50, 6)
+        isRunning = True
     
-img = cv2.imread('connections_test.jpg', cv2.IMREAD_COLOR)
+    
+
+video = cv2.VideoCapture(0)
+ret, img = video.read()
+
+fps = video.get(cv2.CAP_PROP_FPS)
+
 cv2.namedWindow('Connection Detection')
 cv2.setMouseCallback('Connection Detection', mouseCallback)
 
-kernel = np.ones((3, 3), np.uint8)
-erosion = cv2.dilate(img, kernel, iterations = 1)
-cv2.imshow('Connection Detection', img)
+isRunning = False
 
+while video.isOpened():
+    
+    if not isRunning:
+        ret, frame = video.read()
+    
+        cv2.imshow('Connection Detection', frame)
+    
+    if cv2.waitKey(int(1000 / fps) + 1) != -1:
+        break
 
 cv2.destroyAllWindows()
