@@ -77,6 +77,34 @@ def collectIntersections(perimeter_border):
 
 
 
+def processImageForSlopeFollowing(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    kernel = np.ones((3, 3), np.uint8)
+    img = cv2.erode(img, kernel, iterations = 2)
+    img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    #img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+    img = cv2.erode(img, kernel, iterations = 2)
+    img = cv2.dilate(img, kernel, iterations = 2)
+    #img = cv2.medianBlur(img, 9)
+    img = cv2.dilate(img, kernel, iterations = 1)
+    
+    return img
+
+
+
+def processImageForColorInjection(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    kernel = np.ones((3, 3), np.uint8)
+    img = cv2.erode(img, kernel, iterations = 2)
+    img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    img = cv2.erode(img, kernel, iterations = 2)
+    img = cv2.dilate(img, kernel, iterations = 2)
+    img = cv2.medianBlur(img, 9)
+    
+    return img
+
+
+
 def traceConnection(img, x_start, y_start, x_end, y_end, r):
     
     current_point = np.array([x_start, y_start], dtype=np.int32)
