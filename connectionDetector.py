@@ -117,10 +117,10 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         x = current_point[0]
         y = current_point[1]
         
-        perimeter_left   = img[ y-r : y+r,   x-r       ]
-        perimeter_top    = img[ y-r      ,   x-r : x+r ]
-        perimeter_right  = img[ y-r : y+r,   x+r       ]
-        perimeter_bottom = img[ y+r      ,   x-r : x+r ]
+        perimeter_left   = img[ y-r : y+r : -1,   x-r            ]
+        perimeter_top    = img[ y-r           ,   x-r : x+r      ]
+        perimeter_right  = img[ y-r : y+r     ,   x+r            ]
+        perimeter_bottom = img[ y+r           ,   x-r : x+r : -1 ]
         
         #iterate around perimeter and register intersections
         intersections_left   = collectIntersections(perimeter_left)
