@@ -105,6 +105,76 @@ def processImageForColorInjection(img):
 
 
 
+def colorInjection(last_slope, slopes, window):
+    
+    window = window.copy()
+    
+    #find last_slope in slopes
+    min_distance = 100000
+    start_index = -1
+    
+    for i in range(len(slopes)):
+    
+        d = np.linalg.norm(slopes[i] - last_slope)
+        
+        if d < min_distance:
+            min_distance = d
+            start_index = i
+            
+    #iterate from there through slopes
+    injection_points = []
+    
+    for i in range(len(slopes)):
+        
+        index = (start_index + i) % len(slopes)
+        
+        #inject color
+        p = slopes[index]
+        r = int(window.shape[0] / 2)
+        
+        step = (-int(p[1] / r), int(p[0] / r))#(int(p[0] / r), int(p[1] / r))
+        
+        if step == (-1, -1):
+            step = (1, 0)
+        elif step == (1, -1):
+            step = (0, 1)
+        elif step == (1, 1):
+            step = (-1, 0)  
+        elif step == (-1, 1):
+            step = (0, -1)
+        
+        injection_point = p + (r, r) + step
+        
+        if(injection_point[0] == 2 * r):
+            injection_point[0] = 2 * r - 1
+        if(injection_point[1] == 2 * r):
+            injection_point[1] = 2 * r - 1
+            
+        injection_point = tuple(injection_point)
+            
+        injection_points.append(injection_point)
+        
+        cv2.floodFill(window, None, injection_point, i + 1)
+        
+    #iterate again and check color order
+    color_order = []
+    
+    for p in injection_points:
+        
+        color_order.append(window[p[0], p[1]])
+        
+    #lookup meaning of color order
+    if color_order == [1, 4, 3, 4]:
+        return slopes[start_index + 1]
+    elif color_order == [1, 2, 3, 4]:
+        return slopes[start_index + 2]
+    elif color_order == [3, 2, 3, 4]:
+        return slopes[start_index + 3]
+    
+    return -1
+
+
+   
 def traceConnection(img, x_start, y_start, x_end, y_end, r):
     
     current_point = np.array([x_start, y_start], dtype=np.int32)
