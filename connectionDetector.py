@@ -77,6 +77,30 @@ def collectIntersections(perimeter_border):
 
 
 
+def collectPotentialNextPoints(img, r, x, y):
+    perimeter_left   = img[ y+r : y-r : -1,   x-r            ]
+    perimeter_top    = img[ y-r           ,   x-r : x+r      ]
+    perimeter_right  = img[ y-r : y+r     ,   x+r            ]
+    perimeter_bottom = img[ y+r           ,   x+r : x-r : -1 ]
+        
+    #iterate around perimeter and register intersections
+    intersections_left   = collectIntersections(perimeter_left)
+    intersections_top    = collectIntersections(perimeter_top)
+    intersections_right  = collectIntersections(perimeter_right)
+    intersections_bottom = collectIntersections(perimeter_bottom)
+        
+    #choose most plausible intersection, by slope continuation or color injection   
+    slopes = []
+        
+    for dy in intersections_left   : slopes.append( np.array([  -r, -dy ], dtype=np.int32) )
+    for dx in intersections_top    : slopes.append( np.array([  dx,  -r ], dtype=np.int32) )
+    for dy in intersections_right  : slopes.append( np.array([   r,  dy ], dtype=np.int32) )
+    for dx in intersections_bottom : slopes.append( np.array([ -dx,   r ], dtype=np.int32) )
+    
+    return slopes
+
+
+
 def processImageForSlopeFollowing(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     kernel = np.ones((3, 3), np.uint8)
@@ -187,24 +211,9 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         x = current_point[0]
         y = current_point[1]
         
-        perimeter_left   = img[ y-r : y+r : -1,   x-r            ]
-        perimeter_top    = img[ y-r           ,   x-r : x+r      ]
-        perimeter_right  = img[ y-r : y+r     ,   x+r            ]
-        perimeter_bottom = img[ y+r           ,   x-r : x+r : -1 ]
+        slopes = collectPotentialNextPoints(img, r, x, y)
         
-        #iterate around perimeter and register intersections
-        intersections_left   = collectIntersections(perimeter_left)
-        intersections_top    = collectIntersections(perimeter_top)
-        intersections_right  = collectIntersections(perimeter_right)
-        intersections_bottom = collectIntersections(perimeter_bottom)
         
-        #choose most plausible intersection, by slope continuation or color injection   
-        slopes = []
-        
-        for dy in intersections_left   : slopes.append( np.array([ -r, dy ], dtype=np.int32) )
-        for dx in intersections_top    : slopes.append( np.array([ dx, -r ], dtype=np.int32) )
-        for dy in intersections_right  : slopes.append( np.array([  r, dy ], dtype=np.int32) )
-        for dx in intersections_bottom : slopes.append( np.array([ dx,  r ], dtype=np.int32) )
         
         last_slope = closestSlope(last_slope, slopes)
         
