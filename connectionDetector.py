@@ -1,6 +1,26 @@
 import math
 import numpy as np
 import cv2
+
+def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
+    ###########begin visualization for debugging###############
+        #print('step ', len(slopes))
+        new_img = img.copy()#cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        
+        cv2.rectangle(new_img, tuple(current_point - (r, r)), tuple(current_point + (r, r)), (0, 255, 0))            
+                 
+        cv2.circle(new_img, tuple(current_point), 2, (0,0,255), thickness = -1)
+        
+        for s in slopes:
+            cv2.circle(new_img, tuple(current_point + s), 2, (0,0,255), thickness = -1)
+            
+        cv2.circle(new_img, tuple(current_point + last_slope), 3, (255,100,90), thickness = -1)
+        
+        cv2.imshow('Connection Detection', new_img)
+        if cv2.waitKey(50) != -1:
+            if cv2.waitKey(200) != -1: return 'break'
+        ###########end   visualization for debugging###############
+
   
 
   
@@ -217,23 +237,7 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         
         last_slope = closestSlope(last_slope, slopes)
         
-        ###########begin visualization for debugging###############
-        print('step')
-        new_img = img.copy()
-        
-        cv2.rectangle(new_img, tuple(current_point - (r, r)), tuple(current_point + (r, r)), (0, 255, 0))            
-                 
-        cv2.circle(new_img, tuple(current_point), 2, (0,0,255), thickness = -1)
-        
-        for s in slopes:
-            cv2.circle(new_img, tuple(current_point + s), 2, (0,0,255), thickness = -1)
-            
-        cv2.circle(new_img, tuple(current_point + last_slope), 2, (255,100,90), thickness = -1)
-        
-        cv2.imshow('Connection Detection', new_img)
-        if cv2.waitKey(0) != -1:
-            if cv2.waitKey(150) != -1: break
-        ###########end   visualization for debugging###############
+        if DEBUG_VISUAL(slopes, img, r, current_point, last_slope) == 'break': break
         
         current_point += last_slope   #last_slope is still current slope at this point but already called last_slope for next step
           
