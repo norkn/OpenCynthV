@@ -4,11 +4,23 @@
 # weitere: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 #https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html
 
+#https://dev.to/simarpreetsingh019/detecting-geometrical-shapes-in-an-image-using-opencv-4g72
+# https://docs.opencv.org/3.4/d1/d32/tutorial_py_contour_properties.html
+
 # import the necessary packages
 import argparse
 import imutils
 import cv2
 import numpy as np
+
+# kSize= 5
+# invert = cv2.medianBlur(invert, kSize)
+
+# kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+# opening= cv2.morphologyEx(mask,cv2.MORPH_OPEN,kernel)
+
+kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+# 
 
 
 #cap = cv2.VideoCapture('VIDEO1.mp4')
@@ -20,17 +32,24 @@ ap.add_argument("-i", "--image", required=True,
 args = vars(ap.parse_args())
 vid = cv2.VideoCapture(args["image"])
 
+maxx = vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+maxy = vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
 while vid.isOpened():
 	ret, cap = vid.read()
-
+	print(maxy, maxx)
 	# load the image, convert it to grayscale, blur it slightly,
 	# and threshold it
 	#image = cv2.imread(args["image"])
 	gray = cv2.cvtColor(cap, cv2.COLOR_BGR2GRAY)
+	
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 	thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
             cv2.THRESH_BINARY,149,4)
-	invert = cv2.bitwise_not(thresh)
+	opening= cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+	blurred2 = cv2.GaussianBlur(opening, (5, 5), 0)
+	invert = cv2.bitwise_not(blurred2)
+
 	#thresh = cv2.threshold(blurred, 105, 255, cv2.THRESH_BINARY)[1]
 
 	# find contours in the thresholded image
@@ -40,26 +59,42 @@ while vid.isOpened():
 
 	# loop over the contours
 	for c in cnts:
-		# compute the center of the contour
-		M = cv2.moments(c)
-		if M["m00"] != 0:
-			cX = int(M["m10"] / M["m00"])
-			cY = int(M["m01"] / M["m00"])
-		else:
-			cX, cY = 0, 0
-
-		#cX = int(M["m10"] / M["m00"])
-		#cY = int(M["m01"] / M["m00"])
-
-		# draw the contour and center of the shape on the image
-		cv2.drawContours(cap, [c], -1, (0, 255, 0), 2)
-		cv2.circle(cap, (cX, cY), 7, (255, 255, 255), -1)
-		cv2.putText(cap, "center", (cX - 20, cY - 20),
-			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+		area=cv2.contourArea(c)
+		if area > 2000:
+			leftmost = tuple(c[c[:,:,0].argmin()][0])
+			rightmost = tuple(c[c[:,:,0].argmax()][0])
+			topmost = tuple(c[c[:,:,1].argmin()][0])
+			bottommost = tuple(c[c[:,:,1].argmax()][0])
 			
-		# show the image
-		cv2.imshow("cap", cap)
-	if cv2.waitKey(50) != -1:
+			if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
+				#print("left:", leftmost, "right:", rightmost, "top:", topmost, "bottom:", bottommost)
+
+				epsilon = 0.04*cv2.arcLength(c,True)
+				c = cv2.approxPolyDP(c,epsilon,True)
+
+				# compute the center of the contour
+				M = cv2.moments(c)
+				if M["m00"] != 0:
+					cX = int(M["m10"] / M["m00"])
+					cY = int(M["m01"] / M["m00"])
+				else:
+					cX, cY = 0, 0
+
+				#cX = int(M["m10"] / M["m00"])
+				#cY = int(M["m01"] / M["m00"])
+
+				# draw the contour and center of the shape on the image
+				cv2.drawContours(cap, [c], -1, (0, 255, 0), 2)
+				cv2.circle(cap, (cX, cY), 7, (255, 255, 255), -1)
+				cv2.putText(cap, "area " + str(area), (cX - 20, cY - 20),
+					cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+					
+	# show the image
+	cv2.namedWindow("cap", cv2.WINDOW_NORMAL)  
+	cv2.resizeWindow("cap", 1280, 720)   
+	cv2.imshow("cap", cap)
+
+	if cv2.waitKey(90) != -1:
 		break;
 
 vid.release()
