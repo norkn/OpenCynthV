@@ -154,7 +154,7 @@ def colorInjection(last_slope, slopes, window):
     
     window = window.copy()
     
-    start_index = indexOfClosestElementInList(last_slope, slopes)
+    start_index = indexOfClosestElementInList(closestSlope(last_slope, slopes), slopes) #indexOfClosestElementInList(last_slope, slopes)
     r = int(window.shape[0] / 2)
     perimeter_border = getPerimeterBorder(r)
     
@@ -185,15 +185,61 @@ def colorInjection(last_slope, slopes, window):
         
         color_order.append(window[p[1], p[0]])
     print(color_order)
-    #lookup meaning of color order
-    if color_order == [1, 4, 3, 4]:
-        return slopes[(start_index + 1)%len(slopes)]
-    elif color_order == [1, 2, 3, 4]:
-        return slopes[(start_index + 2)%len(slopes)]
-    elif color_order == [3, 2, 3, 4]:
-        return slopes[(start_index + 3)%len(slopes)]
     
-    return None
+    #remove unconnected intersections
+    i = 0
+    
+    while i < len(color_order) - 1:
+        
+        if color_order[i] == color_order[i + 1]:
+            
+            color_order.pop(i + 1)
+            
+            slopes.pop((start_index + i + 1) % len(slopes))
+            if start_index > i + 1: start_index -= 1
+            
+            for j in range(i, len(color_order)):
+                               
+                color_order[j] -= 1
+                
+        else:
+            i += 1
+            
+    
+    color_order = tuple(color_order)
+        
+    #lookup table for meaning of color order
+    color_order_meaning = {(1, 4, 3, 4) : 1, 
+                           (1, 2, 3, 4) : 2,
+                           (3, 2, 3, 4) : 3,
+                           (1, 5, 3, 4, 5) : 1, #fused point on perimeter
+                           (1, 2, 3, 4, 5) : 2, #ambiguous case w\ flip
+                           (4, 2, 3, 4, 5) : 4, #flipped case fuse point on perimeter
+                           #(1, 2, 3, 4, 5) : 3 #ambiguous case w\ flip
+                           (1, 6, 3, 6, 5, 6) : 1,
+                           (1, 6, 3, 4, 5, 6) : 1,
+                           (1, 6, 5, 4, 5, 6) : 1,
+                           (1, 2, 3, 6, 5, 6) : 2,
+                           #(1, 2, 3, 4, 5, 6) : 2, #ambiguous case, gets overwritten
+                           (1, 2, 5, 4, 5, 6) : 2,
+                           (3, 2, 3, 6, 5, 6) : 3,
+                           (1, 2, 3, 4, 5, 6) : 3, #ambiguous case, might also sometimes mean 2. more often 3 though
+                           #symmetric cases for 6 intersections
+                           (5, 2, 5, 4, 5, 6) : 5,
+                           (5, 2, 3, 4, 5, 6) : 5,
+                           (5, 4, 3, 4, 5, 5) : 5,
+                           (3, 2, 3, 4, 5, 6) : 4,
+                           #(1, 2, 3, 4, 5, 6) : 4, #ambiguous case
+                           (1, 4, 3, 4, 5, 6) : 4               
+                           }
+            
+    
+    #lookup meaning of color order
+    if color_order in color_order_meaning:
+        point_number = color_order_meaning[color_order]
+        return True, slopes[(start_index + point_number)%len(slopes)]
+    
+    return False, slopes
 
 
    
@@ -212,21 +258,29 @@ def traceConnection(img, x_start, y_start, x_end, y_end, r):
         x = current_point[0]
         y = current_point[1]
         
-        slopes = collectPotentialNextPoints(img_slope_following, r, x, y)
-        last_slope_1 = closestSlope(last_slope, slopes)
+        window = img_color_injection[ y-r : y+r, x-r : x+r ]
+        next_points = collectPotentialNextPoints(window, r, r, r)
         
+        ret, col_inj_result = colorInjection(np.array([0, 0]) - last_slope, next_points, window)
         
-        last_slope_2 = None
-        if len(slopes) == 4:
-            window = img_color_injection[ y-r : y+r, x-r : x+r ]
-            last_slope_2 = colorInjection(np.array([0, 0]) - last_slope, slopes, window)
-            if last_slope_2 is not None:
-                last_slope = last_slope_2
-                
-        if not np.array_equal(last_slope, last_slope_2):
-            last_slope = last_slope_1
+        if ret:
+            last_slope = col_inj_result
+        else:
+            next_points = collectPotentialNextPoints(img_color_injection, int(r / 2), x, y)
+            last_slope = closestSlope(last_slope, next_points)
+            
+            #if DEBUG_VISUAL(next_points, img_color_injection, int(r / 2), current_point, last_slope) == 'break': break
+            
+            x = current_point[0]
+            y = current_point[1]
         
-        if DEBUG_VISUAL(slopes, img, r, current_point, last_slope) == 'break': break
+            next_points = collectPotentialNextPoints(img_color_injection, int(r / 2), x, y)
+            last_slope = closestSlope(last_slope, next_points)
+            
+            #if DEBUG_VISUAL(next_points, img_color_injection, int(r / 2), current_point, last_slope) == 'break': break
+            #last_slope = closestSlope(last_slope, col_inj_result)
+        
+        if DEBUG_VISUAL(next_points, img_color_injection, r, current_point, last_slope) == 'break': break
         
         current_point += last_slope   #last_slope is still current slope at this point but already called last_slope for next step
         
