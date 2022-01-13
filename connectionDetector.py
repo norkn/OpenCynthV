@@ -116,14 +116,63 @@ def processImageForSlopeFollowing(img):
 
 
 
-def processImageForColorInjection(img):
+def processImageForColorInjection2(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # for y in range(img.shape[0]):
+    #     for x in range(img.shape[1]):
+    #             img[y,x] = np.clip(1.5 * img[y,x], 0, 255)
+    #cv2.convertScaleAbs(img, alpha=1.5, beta=0)
+    
     kernel = np.ones((3, 3), np.uint8)
+    # kernel[0, 0] = 0
+    # kernel[2, 0] = 0
+    # kernel[2, 2] = 0
+    # kernel[0, 2] = 0
     img = cv2.erode(img, kernel, iterations = 2)
     img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    #img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+    
+    # img = cv2.dilate(img, kernel, iterations = 1)
+    # img = cv2.erode(img, kernel, iterations = 1)
+    
     img = cv2.erode(img, kernel, iterations = 2)
     img = cv2.dilate(img, kernel, iterations = 2)
-    img = cv2.medianBlur(img, 9)
+    img = cv2.medianBlur(img, 5)
+    img = cv2.dilate(img, kernel, iterations = 1)
+    
+    #how about: piecewise: color inject count colors c; while(new colors=c){erode;color inject and count new colors;}
+    
+    return img
+
+def processImageForColorInjection(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # for y in range(img.shape[0]):
+    #     for x in range(img.shape[1]):
+    #             img[y,x] = np.clip(1.5 * img[y,x], 0, 255)
+    #cv2.convertScaleAbs(img, alpha=1.5, beta=0)
+    
+    kernel = np.ones((3, 3), np.uint8)
+    # kernel[0, 0] = 0
+    # kernel[2, 0] = 0
+    # kernel[2, 2] = 0
+    # kernel[0, 2] = 0
+    img = cv2.GaussianBlur(img,(3,3),8)
+    img = cv2.erode(img, kernel, iterations = 1)
+    
+    img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,4)
+    #img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,3)
+    
+    # img = cv2.dilate(img, kernel, iterations = 1)
+    # img = cv2.erode(img, kernel, iterations = 1)
+    
+    img = cv2.erode(img, kernel, iterations = 2)
+    #img = cv2.dilate(img, kernel, iterations = 2)
+    img = cv2.medianBlur(img, 5)
+    img = cv2.dilate(img, kernel, iterations = 2)
+    
+    #how about: piecewise: color inject count colors c; while(new colors=c){erode;color inject and count new colors;}
     
     return img
 
