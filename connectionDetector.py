@@ -29,10 +29,21 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
 
 _INF = 0xFFFFFFFF
 
+_ENDPOINT_THRESHOLD = 10
 _endpoints = []
 
-def _isEndpoint(p):
-    return p in _endpoints
+def _isPointsClose(p, q):
+
+    return np.linalg.norm(np.array(p) - np.array(q)) < _ENDPOINT_THRESHOLD
+
+def _isCloseToAnEndpoint(p):
+
+    for e in _endpoints:
+
+        if _isPointsClose(p, e):
+            return True
+
+    return False
 
 
 def _isCloseToBlack(c):
@@ -249,13 +260,13 @@ def _chooseNextPoint(img, r, current_point, last_slope):
 
     if ret:
         last_slope = col_inj_result
-        DEBUG_VISUAL(next_points, img, r, current_point, last_slope)
+        #DEBUG_VISUAL(next_points, img, r, current_point, last_slope)
         current_point += last_slope
     else:
-        DEBUG_points = next_points
+        #DEBUG_points = next_points
         #next_points = _collectPotentialNextPoints(img, r, x, y)
         last_slope = _closestSlope(last_slope, col_inj_result)  # next_points)
-        DEBUG_VISUAL(DEBUG_points, img, r, current_point, last_slope)
+        #DEBUG_VISUAL(DEBUG_points, img, r, current_point, last_slope)
         current_point += last_slope
 
     return current_point, last_slope
@@ -299,11 +310,12 @@ def _traceConnection(img, x_start, y_start, r):
 
     img_color_injection = _preprocess(img)
 
-    current_point = np.array([x_start, y_start], dtype=np.int32)
+    starting_point = np.array([x_start, y_start], dtype=np.int32)
+    current_point = starting_point
     #pad image
     last_slope = np.array([1, 0], dtype=np.int32)
 
-    while(not _isEndpoint(current_point)):
+    while(not _isCloseToAnEndpoint(current_point) and not _isPointsClose(current_point, starting_point)):
 
         current_point_votes = []
         last_slope_votes = []
@@ -321,16 +333,16 @@ def _traceConnection(img, x_start, y_start, r):
     return current_point
 
 
-def traceConnections(img, typesAndPoints, r):
+def traceConnections(img, shapesAndPoints, r):
 
-    _endpoints = [e[1] for e in typesAndPoints]
+    _endpoints = [e[1] for e in shapesAndPoints]
 
-    nodes = typesAndPoints
+    nodes = shapesAndPoints
 
     edges = set()
 
     for p in _endpoints:
-        if not (_traceConnection(img, p[0], p[1], r), p) in edges:
-            edges.add( (p, _traceConnection(img, p[0], p[1], r)) )
+        if not (tuple(_traceConnection(img, p[0], p[1], r)), p) in edges:
+            edges.add( (p, tuple(_traceConnection(img, p[0], p[1], r))) )
 
     return (nodes, edges)

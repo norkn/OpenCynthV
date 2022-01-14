@@ -8,31 +8,34 @@
 # https://docs.opencv.org/3.4/d1/d32/tutorial_py_contour_properties.html
 
 # import the necessary packages
-import argparse
 import imutils
 import cv2
-import numpy as np
-
-# kSize= 5
-# invert = cv2.medianBlur(invert, kSize)
-
-# kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-# opening= cv2.morphologyEx(mask,cv2.MORPH_OPEN,kernel)
-
-kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-# 
 
 
-vid = cv2.VideoCapture(1)
-maxx = vid.get(cv2.CAP_PROP_FRAME_WIDTH)
-maxy = vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+def _preprocess(img):
 
-def detect(c):
+    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+        cv2.THRESH_BINARY,149,4)
+    opening= cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+
+    invert = cv2.bitwise_not(opening)
+
+    return invert
+
+
+
     # initialize the shape name and approximate the contour
+def _detect(c):
+
     shape = "unidentified"
     epsilon = 0.04*cv2.arcLength(c,True)
     approx = cv2.approxPolyDP(c,epsilon,True)
     # if the shape is a triangle, it will have 3 vertices
+
     if len(approx) == 3:
         shape = "triangle"
     # if the shape has 4 vertices, it is either a square or
@@ -52,33 +55,33 @@ def detect(c):
     else:
         shape = "circle"
     # return the name of the shape
-    return shape, approx
 
-while vid.isOpened():
-    ret, cap = vid.read()
-	#print(maxy, maxx)
-	
-    # load the image, convert it to grayscale, blur it slightly,
-	# and threshold it
-	#image = cv2.imread(args["image"])
-    gray = cv2.cvtColor(cap, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
-        cv2.THRESH_BINARY,149,4)
-    opening= cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
-	# blurred2 = cv2.GaussianBlur(opening, (5, 5), 0)
-    invert = cv2.bitwise_not(opening)
+    M = cv2.moments(c)
+    if M["m00"] != 0:
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+    else:
+        cX, cY = 0, 0
 
-	#thresh = cv2.threshold(blurred, 105, 255, cv2.THRESH_BINARY)[1]
+    return shape, (cX, cY)
 
-	# find contours in the thresholded image
-    cnts = cv2.findContours(invert.copy(), cv2.RETR_EXTERNAL,
+
+
+def findShapes(img, maxx, maxy):
+
+    img = _preprocess(img)
+
+    cnts = cv2.findContours(img, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
     # loop over the contours
+    detectedShapes = []
+
     for c in cnts:
+
         area=cv2.contourArea(c)
+
         if area > 700:
             leftmost = tuple(c[c[:,:,0].argmin()][0])
             rightmost = tuple(c[c[:,:,0].argmax()][0])
@@ -86,34 +89,10 @@ while vid.isOpened():
             bottommost = tuple(c[c[:,:,1].argmax()][0])
             
             if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
-                #print("left:", leftmost, "right:", rightmost, "top:", topmost, "bottom:", bottommost)
-
-                shape, approx = detect(c)
                 # compute the center of the contour
-                M = cv2.moments(c)
-                if M["m00"] != 0:
-                    cX = int(M["m10"] / M["m00"])
-                    cY = int(M["m01"] / M["m00"])
-                else:
-                    cX, cY = 0, 0
 
-                #cX = int(M["m10"] / M["m00"])
-                #cY = int(M["m01"] / M["m00"])
+                shape, coords = _detect(c)
+                detectedShapes.append((shape, coords, c))
+    
 
-
-
-                # draw the contour and center of the shape on the image
-                cv2.drawContours(cap, [c], -1, (50, 240, 240), 2)
-                cv2.circle(cap, (cX, cY), 7, (255, 255, 255), -1)
-                cv2.putText(cap, str(shape), (cX - 20, cY - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
-					
-    # show the image
-    cv2.namedWindow("cap", cv2.WINDOW_NORMAL)  
-	#cv2.resizeWindow("cap", 1280, 720)
-    cv2.imshow("cap", cap)
-    if cv2.waitKey(1) != -1:
-        break;
-
-vid.release()
-cv2.destroyAllWindows()
+    return detectedShapes
