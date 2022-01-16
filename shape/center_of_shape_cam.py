@@ -26,16 +26,15 @@ def _preprocess(img):
 
     return invert
 
-
-
-    # initialize the shape name and approximate the contour
+    
 def _detect(c):
 
+    # initialize the shape name and approximate the contour
     shape = "unidentified"
     epsilon = 0.04*cv2.arcLength(c,True)
     approx = cv2.approxPolyDP(c,epsilon,True)
-    # if the shape is a triangle, it will have 3 vertices
 
+    # if the shape is a triangle, it will have 3 vertices
     if len(approx) == 3:
         shape = "triangle"
     # if the shape has 4 vertices, it is either a square or
@@ -54,8 +53,8 @@ def _detect(c):
     # otherwise, we assume the shape is a circle
     else:
         shape = "circle"
-    # return the name of the shape
 
+    # compute the center of the contour
     M = cv2.moments(c)
     if M["m00"] != 0:
         cX = int(M["m10"] / M["m00"])
@@ -64,7 +63,6 @@ def _detect(c):
         cX, cY = 0, 0
 
     return shape, (cX, cY)
-
 
 
 def findShapes(img, maxx, maxy):
@@ -81,18 +79,15 @@ def findShapes(img, maxx, maxy):
     for c in cnts:
 
         area=cv2.contourArea(c)
-
-        if area > 700:
+        print(area / (maxx * maxy))
+        if area / (maxx * maxy) > 0.01:
             leftmost = tuple(c[c[:,:,0].argmin()][0])
             rightmost = tuple(c[c[:,:,0].argmax()][0])
             topmost = tuple(c[c[:,:,1].argmin()][0])
             bottommost = tuple(c[c[:,:,1].argmax()][0])
             
             if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
-                # compute the center of the contour
-
                 shape, coords = _detect(c)
                 detectedShapes.append((shape, coords, c))
     
-
     return detectedShapes

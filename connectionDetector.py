@@ -32,6 +32,8 @@ _INF = 0xFFFFFFFF
 _ENDPOINT_THRESHOLD = 10
 _endpoints = []
 
+_white_out = None
+
 def _isPointsClose(p, q):
 
     return np.linalg.norm(np.array(p) - np.array(q)) < _ENDPOINT_THRESHOLD
@@ -115,6 +117,9 @@ def _indexOfClosestElementInList(e, l):
 
 
 def _preprocess(img):
+    
+    global _white_out
+
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     kernel = np.ones((3, 3), np.uint8)
@@ -126,6 +131,8 @@ def _preprocess(img):
     img = cv2.erode(img, kernel, iterations=2)
     img = cv2.medianBlur(img, 5)
     img = cv2.dilate(img, kernel, iterations=3)
+
+    img = cv2.add(img, _white_out)
 
     return img
 
@@ -333,7 +340,11 @@ def _traceConnection(img, x_start, y_start, r):
     return current_point
 
 
-def traceConnections(img, shapesAndPoints, r):
+def traceConnections(img, shapesAndPoints, modules_mask, r):
+
+    global _white_out, _endpoints
+
+    _white_out = modules_mask
 
     _endpoints = [e[1] for e in shapesAndPoints]
 
