@@ -20,7 +20,7 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
                3, (255, 100, 90), thickness=-1)
 
     cv2.imshow('Connection Detection', new_img)
-    if cv2.waitKey(500) != -1:
+    if cv2.waitKey(50) != -1:
         if cv2.waitKey(10) != -1:
             cv2.destroyAllWindows()
             quit()
@@ -29,7 +29,7 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
 
 _INF = 0xFFFFFFFF
 
-_ENDPOINT_THRESHOLD = 10
+_ENDPOINT_THRESHOLD = 30
 _endpoints = []
 
 _white_out = None
@@ -37,6 +37,15 @@ _white_out = None
 def _isPointsClose(p, q):
 
     return np.linalg.norm(np.array(p) - np.array(q)) < _ENDPOINT_THRESHOLD
+
+def _endpointCloseTo(p):
+
+    for e in _endpoints:
+
+        if _isPointsClose(p, e):
+            return e
+
+    return None
 
 def _isCloseToAnEndpoint(p):
 
@@ -262,6 +271,9 @@ def _chooseNextPoint(img, r, current_point, last_slope):
     window = img[y-r: y+r, x-r: x+r]
     next_points = _collectPotentialNextPoints(window, r, r, r)
 
+    if not len(next_points) > 0:
+        return None, None
+
     ret, col_inj_result = _colorInjection(
         np.array([0, 0]) - last_slope, next_points, window)
 
@@ -322,7 +334,7 @@ def _traceConnection(img, x_start, y_start, r):
     #pad image
     last_slope = np.array([1, 0], dtype=np.int32)
 
-    while(not _isCloseToAnEndpoint(current_point) and not _isPointsClose(current_point, starting_point)):
+    while(not _isCloseToAnEndpoint(current_point) or _isPointsClose(current_point, starting_point)):
 
         current_point_votes = []
         last_slope_votes = []
@@ -331,13 +343,17 @@ def _traceConnection(img, x_start, y_start, r):
             #look at pixels in circle or square of certain radius around current point
             c, l = _chooseNextPoint(
                 img_color_injection, att.r, current_point, last_slope)
+
+            if c is None:
+                return None
+
             current_point_votes.append(c)
             last_slope_votes.append(l)
 
         current_point, last_slope = np.array(_countVotes(
             current_point_votes)), np.array(_countVotes(last_slope_votes))
 
-    return current_point
+    return _endpointCloseTo(current_point)
 
 
 def traceConnections(img, shapesAndPoints, modules_mask, r):
@@ -353,7 +369,10 @@ def traceConnections(img, shapesAndPoints, modules_mask, r):
     edges = set()
 
     for p in _endpoints:
-        if not (tuple(_traceConnection(img, p[0], p[1], r)), p) in edges:
-            edges.add( (p, tuple(_traceConnection(img, p[0], p[1], r))) )
+        result = _traceConnection(img, p[0], p[1], r)
+        if result is not None:
+            result_edge = (tuple(result), p)
+            if not result_edge in edges:
+                edges.add( result_edge )
 
     return (nodes, edges)

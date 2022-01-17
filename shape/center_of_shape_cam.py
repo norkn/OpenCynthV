@@ -79,8 +79,8 @@ def findShapes(img, maxx, maxy):
     for c in cnts:
 
         area=cv2.contourArea(c)
-        print(area / (maxx * maxy))
-        if area / (maxx * maxy) > 0.01:
+        
+        if area / (maxx * maxy) > 0.008:
             leftmost = tuple(c[c[:,:,0].argmin()][0])
             rightmost = tuple(c[c[:,:,0].argmax()][0])
             topmost = tuple(c[c[:,:,1].argmin()][0])
