@@ -3,7 +3,7 @@ import numpy as np
 
 from shape import center_of_shape_cam as sh
 import connectionDetector as cd
-import misc
+import utils
 
 
 def mouseCallback(event, x, y, flags, param):
@@ -12,7 +12,7 @@ def mouseCallback(event, x, y, flags, param):
 
     if event == cv2.EVENT_LBUTTONDOWN:
 
-        modules_whiteout = misc.getWhiteoutByHue(frame, 0, 100)
+        modules_whiteout = utils.getWhiteoutByHue(frame, 0, 100)
 
         no_connections_mask = cv2.bitwise_and(modules_whiteout, sh._preprocess(frame))
         no_connections_mask_inverted = cv2.bitwise_not(no_connections_mask)

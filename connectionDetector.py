@@ -2,6 +2,8 @@ import math
 import numpy as np
 import cv2
 
+import utils
+
 
 def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
 
@@ -25,9 +27,6 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
             cv2.destroyAllWindows()
             quit()
 
-
-
-_INF = 0xFFFFFFFF
 
 _ENDPOINT_THRESHOLD = 30
 _endpoints = []
@@ -109,22 +108,6 @@ def _collectPotentialNextPoints(img, r, x, y):
     return intersections
 
 
-def _indexOfClosestElementInList(e, l):
-
-    min_distance = _INF
-    index = -1
-
-    for i in range(len(l)):
-
-        d = np.linalg.norm(l[i] - e)
-
-        if d < min_distance:
-            min_distance = d
-            index = i
-
-    return index
-
-
 def _preprocess(img):
     
     global _white_out
@@ -170,7 +153,7 @@ def _colorInjection(last_slope, slopes, window):
 
     window = window.copy()
 
-    start_index = _indexOfClosestElementInList(_closestSlope(
+    start_index = utils.indexOfClosestElementInList(_closestSlope(
         last_slope, slopes), slopes)  # indexOfClosestElementInList(last_slope, slopes)
     r = int(window.shape[0] / 2)
     perimeter_border = _getPerimeterBorder(r)
@@ -183,7 +166,7 @@ def _colorInjection(last_slope, slopes, window):
         index = (start_index + i) % len(slopes)
 
         injection_point = slopes[index] + (r, r)
-        border_index = _indexOfClosestElementInList(
+        border_index = utils.indexOfClosestElementInList(
             injection_point, perimeter_border)
 
         while _isCloseToBlack(window[injection_point[1], injection_point[0]]):
@@ -291,31 +274,6 @@ def _chooseNextPoint(img, r, current_point, last_slope):
     return current_point, last_slope
 
 
-def _countVotes(l):
-
-    dictionary = {}
-
-    for element in l:
-
-        element = tuple(element)
-
-        if element in dictionary:
-            dictionary[element] += 1
-        else:
-            dictionary[element] = 1
-
-    result = None
-    max_votes = -1
-
-    for element in dictionary.keys():
-
-        if dictionary[element] > max_votes:
-            result = element
-            max_votes = dictionary[element]
-
-    return result
-
-
 class _Attempt:
     r = 0
 
@@ -350,8 +308,8 @@ def _traceConnection(img, x_start, y_start, r):
             current_point_votes.append(c)
             last_slope_votes.append(l)
 
-        current_point, last_slope = np.array(_countVotes(
-            current_point_votes)), np.array(_countVotes(last_slope_votes))
+        current_point, last_slope = np.array(utils.countVotes(
+            current_point_votes)), np.array(utils.countVotes(last_slope_votes))
 
     return _endpointCloseTo(current_point)
 
