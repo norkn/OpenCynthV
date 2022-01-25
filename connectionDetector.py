@@ -1,4 +1,6 @@
+import time
 import math
+
 import numpy as np
 import cv2
 
@@ -28,14 +30,16 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
             quit()
 
 
-_ENDPOINT_THRESHOLD = 30
+_endpoint_threshold = 30
 _endpoints = []
 
-_white_out = None
+whiteout = None
+
+_TIMEOUT = 1
 
 def _isPointsClose(p, q):
 
-    return np.linalg.norm(np.array(p) - np.array(q)) < _ENDPOINT_THRESHOLD
+    return np.linalg.norm(np.array(p) - np.array(q)) < _endpoint_threshold
 
 def _endpointCloseTo(p):
 
@@ -89,15 +93,11 @@ def _collectPotentialNextPoints(img, r, x, y):
         i += 1
 
         if _isCloseToBlack(img[y - r + p[1], x - r + p[0]]):
-
             isOnIntersection = True
             avg_index += i
-            count += 1
-
+            count += 1            
         else:
-
             if isOnIntersection:
-
                 isOnIntersection = False
                 avg_index = int(avg_index / count)
                 intersections.append(
@@ -108,9 +108,7 @@ def _collectPotentialNextPoints(img, r, x, y):
     return intersections
 
 
-def _preprocess(img):
-    
-    global _white_out
+def _preprocess(img, whiteout):
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -123,8 +121,10 @@ def _preprocess(img):
     img = cv2.erode(img, kernel, iterations=2)
     img = cv2.medianBlur(img, 5)
     img = cv2.dilate(img, kernel, iterations=3)
+    
+    img = cv2.add(img, whiteout)
 
-    img = cv2.add(img, _white_out)
+    img = cv2.erode(img, kernel, iterations=2)
 
     return img
 
@@ -247,7 +247,7 @@ def _colorInjection(last_slope, slopes, window):
 
 
 def _chooseNextPoint(img, r, current_point, last_slope):
-
+    
     x = current_point[0]
     y = current_point[1]
 
@@ -262,13 +262,13 @@ def _chooseNextPoint(img, r, current_point, last_slope):
 
     if ret:
         last_slope = col_inj_result
-        #DEBUG_VISUAL(next_points, img, r, current_point, last_slope)
+        # DEBUG_VISUAL(next_points, img, r, current_point, last_slope)
         current_point += last_slope
     else:
-        #DEBUG_points = next_points
-        #next_points = _collectPotentialNextPoints(img, r, x, y)
+        # DEBUG_points = next_points
+        # next_points = _collectPotentialNextPoints(img, r, x, y)
         last_slope = _closestSlope(last_slope, col_inj_result)  # next_points)
-        #DEBUG_VISUAL(DEBUG_points, img, r, current_point, last_slope)
+        # DEBUG_VISUAL(DEBUG_points, img, r, current_point, last_slope)
         current_point += last_slope
 
     return current_point, last_slope
@@ -283,9 +283,9 @@ class _Attempt:
 
 def _traceConnection(img, x_start, y_start, r):
 
-    attempts = [_Attempt(r)]  # Attempt(r+2), Attempt(r), Attempt(r-2)]
+    start_time = time.time()
 
-    img_color_injection = _preprocess(img)
+    attempts = [_Attempt(r)]  # Attempt(r+2), Attempt(r), Attempt(r-2)]
 
     starting_point = np.array([x_start, y_start], dtype=np.int32)
     current_point = starting_point
@@ -294,13 +294,22 @@ def _traceConnection(img, x_start, y_start, r):
 
     while(not _isCloseToAnEndpoint(current_point) or _isPointsClose(current_point, starting_point)):
 
+        if(time.time() - start_time > _TIMEOUT):
+            print('TIMEOUT')
+            return None
+
+        if current_point[0] - r < 0 or current_point[0] + r > img.shape[1] \
+            or current_point[1] - r < 0 or current_point[1] + r > img.shape[0]:
+        
+            return None
+
         current_point_votes = []
         last_slope_votes = []
 
         for att in attempts:
             #look at pixels in circle or square of certain radius around current point
             c, l = _chooseNextPoint(
-                img_color_injection, att.r, current_point, last_slope)
+                img, att.r, current_point, last_slope)
 
             if c is None:
                 return None
@@ -313,24 +322,42 @@ def _traceConnection(img, x_start, y_start, r):
 
     return _endpointCloseTo(current_point)
 
+############################################################################
 
-def traceConnections(img, shapesAndPoints, modules_mask, r):
+def setWhiteout(wo):
+    
+    global whiteout
+    whiteout = wo
 
-    global _white_out, _endpoints
+def isConnected(img, r, shape):
 
-    _white_out = modules_mask
+    global whiteout
 
+    img = _preprocess(img, whiteout)
+    intersections = _collectPotentialNextPoints(img, r, shape[1][0], shape[1][1])
+    
+    return len(intersections) > 0
+
+
+def traceConnections(img, shapesAndPoints, white_out, r, endpoint_threshold):
+    
+    global whiteout, _endpoints, _endpoint_threshold
+
+    whiteout = white_out
     _endpoints = [e[1] for e in shapesAndPoints]
+    _endpoint_threshold = endpoint_threshold
+
+    img_processed = _preprocess(img, whiteout)
 
     nodes = shapesAndPoints
 
     edges = set()
 
     for p in _endpoints:
-        result = _traceConnection(img, p[0], p[1], r)
+        result = _traceConnection(img_processed, p[0], p[1], r)
         if result is not None:
             result_edge = (tuple(result), p)
             if not result_edge in edges:
                 edges.add( result_edge )
-
+    
     return (nodes, edges)

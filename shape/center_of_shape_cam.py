@@ -65,7 +65,7 @@ def _detect(c):
     return shape, (cX, cY)
 
 
-def findShapes(img, maxx, maxy):
+def findShapes(img, maxx, maxy, min_area):
 
     img = _preprocess(img)
 
@@ -75,12 +75,13 @@ def findShapes(img, maxx, maxy):
 
     # loop over the contours
     detectedShapes = []
+    detectedContours = []
 
     for c in cnts:
 
         area=cv2.contourArea(c)
         
-        if area / (maxx * maxy) > 0.008:
+        if area / (maxx * maxy) > min_area:
             leftmost = tuple(c[c[:,:,0].argmin()][0])
             rightmost = tuple(c[c[:,:,0].argmax()][0])
             topmost = tuple(c[c[:,:,1].argmin()][0])
@@ -88,6 +89,7 @@ def findShapes(img, maxx, maxy):
             
             if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
                 shape, coords = _detect(c)
-                detectedShapes.append((shape, coords, c))
+                detectedShapes.append((shape, coords))
+                detectedContours.append(c)
     
-    return detectedShapes
+    return detectedShapes, detectedContours
