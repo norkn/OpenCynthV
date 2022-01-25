@@ -18,11 +18,9 @@ i = 0
 new_cnts = []
 maxx = vid.get(cv2.CAP_PROP_FRAME_WIDTH)
 maxy = vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+
 def _preprocess(img):
-
-
-    #new_cnts = np.empty(50, dtype=object)
-    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
 
     # load the image, convert it to grayscale, blur it slightly,
 	# and threshold it
@@ -38,12 +36,6 @@ def _preprocess(img):
         cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-
-
-    #print("c: ", c)
-    #contours =np.array([])
-    #contours = np.append(contours, c)
-    #print("ndim: ", np.ndim(c), "shape: ", np.shape(c), "size: ", np.size(c), "len: ", len(c))	
     return cnts
 
 def identify(c):
@@ -71,14 +63,13 @@ def identify(c):
     else:
         shape = "circle"
     # return the name of the shape
+
     return shape, approx
 
 def select(cnts):
 
     # loop over the contours
     for c in cnts:
-        #print("ndim: ", np.ndim(c), "shape: ", np.shape(c), "size: ", np.size(c), "len: ", len(c))	
-        #print(c)
         area=cv2.contourArea(c)
         if area > 700:
             
@@ -104,6 +95,7 @@ def select(cnts):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
 
                 new_cnts.append((c, (cX, cY), shape))    
+
     return new_cnts
 
 while vid.isOpened():
@@ -121,7 +113,7 @@ while vid.isOpened():
         i = 1 - i
         new_cnts = []
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        print(new_cnts)
+        #print(new_cnts)
         print("ndim: ", np.ndim(new_cnts), "shape: ", np.shape(new_cnts), "size: ", np.size(new_cnts), "len: ", len(new_cnts))
         break        
 
