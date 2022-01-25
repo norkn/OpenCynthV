@@ -8,6 +8,7 @@
 # https://docs.opencv.org/3.4/d1/d32/tutorial_py_contour_properties.html
 
 # import the necessary packages
+
 import imutils
 import cv2
 
@@ -27,11 +28,11 @@ def _preprocess(img):
     return invert
 
     
-def _detect(c):
+def _identify(c):
 
     # initialize the shape name and approximate the contour
     shape = "unidentified"
-    epsilon = 0.04*cv2.arcLength(c,True)
+    epsilon = 0.03*cv2.arcLength(c,True)
     approx = cv2.approxPolyDP(c,epsilon,True)
 
     # if the shape is a triangle, it will have 3 vertices
@@ -54,6 +55,11 @@ def _detect(c):
     else:
         shape = "circle"
 
+    return shape
+
+
+def _getCenterOfShape(c):
+    
     # compute the center of the contour
     M = cv2.moments(c)
     if M["m00"] != 0:
@@ -62,7 +68,34 @@ def _detect(c):
     else:
         cX, cY = 0, 0
 
-    return shape, (cX, cY)
+    return cX, cY
+
+
+def _select(cnts, maxx, maxy, min_area):
+
+    detectedShapes = []
+    detectedContours = []
+
+    # loop over the contours
+    for c in cnts:
+
+        area=cv2.contourArea(c)
+        
+        if area / (maxx * maxy) > min_area:
+
+            leftmost = tuple(c[c[:,:,0].argmin()][0])
+            rightmost = tuple(c[c[:,:,0].argmax()][0])
+            topmost = tuple(c[c[:,:,1].argmin()][0])
+            bottommost = tuple(c[c[:,:,1].argmax()][0])
+            
+            if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
+                
+                shape = _identify(c)
+                (cX, cY) = _getCenterOfShape(c)
+                detectedShapes.append((shape, (cX, cY)))
+                detectedContours.append(c)
+
+    return detectedShapes, detectedContours
 
 
 def findShapes(img, maxx, maxy, min_area):
@@ -73,23 +106,5 @@ def findShapes(img, maxx, maxy, min_area):
         cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-    # loop over the contours
-    detectedShapes = []
-    detectedContours = []
-
-    for c in cnts:
-
-        area=cv2.contourArea(c)
-        
-        if area / (maxx * maxy) > min_area:
-            leftmost = tuple(c[c[:,:,0].argmin()][0])
-            rightmost = tuple(c[c[:,:,0].argmax()][0])
-            topmost = tuple(c[c[:,:,1].argmin()][0])
-            bottommost = tuple(c[c[:,:,1].argmax()][0])
-            
-            if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
-                shape, coords = _detect(c)
-                detectedShapes.append((shape, coords))
-                detectedContours.append(c)
-    
+    detectedShapes, detectedContours = _select(cnts, maxx, maxy, min_area)
     return detectedShapes, detectedContours

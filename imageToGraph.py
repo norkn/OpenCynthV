@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from shape import center_of_shape_cam as sh
+import Module_final as sh
 import connectionDetector as cd
 import utils
 
