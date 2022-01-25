@@ -96,6 +96,9 @@ def select(cnts):
 
                 new_cnts.append((c, (cX, cY), shape))    
 
+    #return new_cnts
+
+def getCntsCoord():
     return new_cnts
 
 while vid.isOpened():
@@ -103,7 +106,10 @@ while vid.isOpened():
     new_cnts = []
     if i == 0:
         cnts = _preprocess(cap)
-    new_cnts = select(cnts)
+    
+    #new_cnts = select(cnts)
+    select(cnts)
+
 
     cv2.namedWindow("cap", cv2.WINDOW_NORMAL)  
     cv2.imshow("cap", cap)
