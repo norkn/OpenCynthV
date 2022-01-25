@@ -41,7 +41,7 @@ def _preprocess(img):
 def identify(c):
     # initialize the shape name and approximate the contour
     shape = "unidentified"
-    epsilon = 0.04*cv2.arcLength(c,True)
+    epsilon = 0.03*cv2.arcLength(c,True)
     approx = cv2.approxPolyDP(c,epsilon,True)
     # if the shape is a triangle, it will have 3 vertices
     if len(approx) == 3:
