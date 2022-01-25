@@ -1,14 +1,20 @@
 <html>
     <title>OpenCynthV</title>
-
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+    </head>
     <body>
-        <div class="cameraView">
 
+        <script src="{{ url_for('static', filename= 'siteController.js') }}"></script>
+        <script src="{{ url_for('static', filename= 'midi.js') }}"></script>
+
+        <div class="cameraView">
+            <img src="{{ url_for('video_feed') }}">
 
         </div>
         <div class="modulesSetup" height="50%">
-            <img src="{{ url_for('video_feed') }}">
-
+            <p1 id= "test">Hier steht das Script</p1>
+            <button id= "button">Turn on the light</button>
         </div>
         <div class="changeParams">
             <input type="range" min="0" max="100" value="50" class="slider" id="attackSlider">
