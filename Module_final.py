@@ -74,7 +74,6 @@ def identify(c):
     return shape, approx
 
 def select(cnts):
-    #new_cnts = []
 
     # loop over the contours
     for c in cnts:
@@ -109,16 +108,15 @@ def select(cnts):
 
 while vid.isOpened():
     ret, cap = vid.read()
-    #new_cnts = []
+    new_cnts = []
     if i == 0:
         cnts = _preprocess(cap)
-    
     new_cnts = select(cnts)
 
-    # show the image
     cv2.namedWindow("cap", cv2.WINDOW_NORMAL)  
-    #cv2.resizeWindow("cap", 1280, 720)
     cv2.imshow("cap", cap)
+
+
     if cv2.waitKey(1) & 0xFF == 32:
         i = 1 - i
         new_cnts = []
