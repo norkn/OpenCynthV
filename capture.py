@@ -2,6 +2,7 @@ from flask import Flask, render_template, Response, request, jsonify
 import cv2
 import numpy as np
 
+import main
 
 app = Flask(__name__)
 
@@ -11,6 +12,9 @@ camera = cv2.VideoCapture(0)
 def gen_frames():  
     while True:
         success, frame = camera.read()  # read the camera frame
+
+        frame = main.update(frame, main.params)
+
         if not success:
             break
         else:
