@@ -5,7 +5,8 @@ import cv2
 import imageToGraph as im2G
 import UI
 
-
+import Module_final as sh
+import connectionDetector as cd
 def drawTrace(frame_out, graph):
 
     if graph is not None:
@@ -42,12 +43,11 @@ def update(frame, params):
 
     global last_time
     global shapes, last_state_was_connected
-    global new_edges, graph
-    global modules_whiteout, frame_to_register
+    global graph
 
     t = time.time()
 
-    if t - last_time > 0.2:
+    if t - last_time > 0.1:
 
         graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, params[3], params[4], graph)
         
@@ -93,17 +93,16 @@ ui = UI.UI(paramNames, paramRanges, params)
 
 def mouseCallback(event, x, y, flags, param):
 
-    global graph
-    global frame, r
+    global frame, params
     global shapes, shape_contours, last_state_was_connected
-    global frame_to_register, modules_whiteout
+    global graph
 
     if event == cv2.EVENT_LBUTTONDOWN:
 
         shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
 
 
-video = cv2.VideoCapture(0)
+video = cv2.VideoCapture(2)
 
 maxx = video.get(cv2.CAP_PROP_FRAME_WIDTH)
 maxy = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -118,7 +117,15 @@ while video.isOpened():
 
     ret, frame = video.read()
 
+    params[3] = int(params[3])
     update(frame, params)
+
+    wo = im2G._getWhiteoutByHue(frame, params[0], params[1])
+    #mods_preproc = sh._preprocess(frame)
+    only_mods = im2G._applyWhiteout(wo, frame)
+    only_cons = cd._preprocess(frame, wo, params[3])
+    cv2.imshow('only mods', only_mods)
+    cv2.imshow('only_cons', only_cons)
 
     if cv2.waitKey(int(1000 / fps) + 1) != -1:
         break

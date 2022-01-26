@@ -108,7 +108,7 @@ def _collectPotentialNextPoints(img, r, x, y):
     return intersections
 
 
-def _preprocess(img, whiteout):
+def _preprocess(img, whiteout, r):
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -125,6 +125,10 @@ def _preprocess(img, whiteout):
     img = cv2.add(img, whiteout)
 
     img = cv2.erode(img, kernel, iterations=2)
+
+    padded = np.ones((r + img.shape[0], r + img.shape[1]), np.uint8)
+    padded[r : r + img.shape[0], r : r + img.shape[1]] = img[:,:]
+    img = padded
 
     return img
 
@@ -289,7 +293,7 @@ def _traceConnection(img, x_start, y_start, r):
 
     starting_point = np.array([x_start, y_start], dtype=np.int32)
     current_point = starting_point
-    #pad image
+    
     last_slope = np.array([1, 0], dtype=np.int32)
 
     while(not _isCloseToAnEndpoint(current_point) or _isPointsClose(current_point, starting_point)):
@@ -333,7 +337,7 @@ def isConnected(img, r, shape):
 
     global whiteout
 
-    img = _preprocess(img, whiteout)
+    img = _preprocess(img, whiteout, r)
     intersections = _collectPotentialNextPoints(img, r, shape[1][0], shape[1][1])
     
     return len(intersections) > 0
@@ -347,14 +351,14 @@ def traceConnections(img, shapesAndPoints, white_out, r, endpoint_threshold):
     _endpoints = [e[1] for e in shapesAndPoints]
     _endpoint_threshold = endpoint_threshold
 
-    img_processed = _preprocess(img, whiteout)
+    img = _preprocess(img, whiteout, r)
 
     nodes = shapesAndPoints
 
     edges = set()
 
     for p in _endpoints:
-        result = _traceConnection(img_processed, p[0], p[1], r)
+        result = _traceConnection(img, p[0], p[1], r)
         if result is not None:
             result_edge = (tuple(result), p)
             if not result_edge in edges:
