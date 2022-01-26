@@ -59,8 +59,8 @@ def update(frame, params):
     drawShapes(frame_out, shapes, shape_contours)
     drawTrace(frame_out, graph)
 
-    cv2.imshow('original', frame_out)
-
+    #cv2.imshow('original', frame_out)
+    return frame_out
 
 ####################GLOBALS#######################
 graph = {}
@@ -88,40 +88,40 @@ paramNames = ['hue', 'hue thresh', 'min contour area', 'r', 'endpoint vicinity']
 params = [hue, hue_thresh, min_area, r, endpoint_thresh]
 paramRanges = [(0, 360), (0, 360), (0, 0.05), (0, 100), (0, 100)]
 
-ui = UI.UI(paramNames, paramRanges, params)
+#ui = UI.UI(paramNames, paramRanges, params)
 ##################################################
 
-def mouseCallback(event, x, y, flags, param):
+# def mouseCallback(event, x, y, flags, param):
 
-    global graph
-    global frame, r
-    global shapes, shape_contours, last_state_was_connected
-    global frame_to_register, modules_whiteout
+#     global graph
+#     global frame, r
+#     global shapes, shape_contours, last_state_was_connected
+#     global frame_to_register, modules_whiteout
 
-    if event == cv2.EVENT_LBUTTONDOWN:
+#     if event == cv2.EVENT_LBUTTONDOWN:
 
-        shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
+#         shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
+
+# def runMain():
+#     video = cv2.VideoCapture(0)
+
+#     maxx = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+#     maxy = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+#     fps = video.get(cv2.CAP_PROP_FPS)
 
 
-video = cv2.VideoCapture(0)
+#     cv2.namedWindow('original')
+#     cv2.setMouseCallback('original', mouseCallback)
 
-maxx = video.get(cv2.CAP_PROP_FRAME_WIDTH)
-maxy = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+#     while video.isOpened():
 
-fps = video.get(cv2.CAP_PROP_FPS)
+#         ret, frame = video.read()
 
+#         update(frame, params)
 
-cv2.namedWindow('original')
-cv2.setMouseCallback('original', mouseCallback)
+#         if cv2.waitKey(int(1000 / fps) + 1) != -1:
+#             break
 
-while video.isOpened():
-
-    ret, frame = video.read()
-
-    update(frame, params)
-
-    if cv2.waitKey(int(1000 / fps) + 1) != -1:
-        break
-
-video.release()
-cv2.destroyAllWindows()
+#     video.release()
+#     cv2.destroyAllWindows()
