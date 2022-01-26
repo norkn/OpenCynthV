@@ -37,7 +37,7 @@ def _identify(c):
 
     # if the shape is a triangle, it will have 3 vertices
     if len(approx) == 3:
-        shape = "triangle"
+        shape = "WaveShaping"
     # if the shape has 4 vertices, it is either a square or
     # a rectangle
     elif len(approx) == 4:
@@ -47,13 +47,13 @@ def _identify(c):
         ar = w / float(h)
         # a square will have an aspect ratio that is approximately
         # equal to one, otherwise, the shape is a rectangle
-        shape = "square" if ar >= 0.91 and ar <= 1.09 else "rectangle"
+        shape = "Convolution" if ar >= 0.90 and ar <= 1.10 else "Oszillator"
         # if the shape is a pentagon, it will have 5 vertices
     elif len(approx) == 5:
-        shape = "pentagon"
+        shape = "StereoPanner"
     # otherwise, we assume the shape is a circle
     else:
-        shape = "circle"
+        shape = "In/Out"
 
     return shape
 
@@ -91,8 +91,15 @@ def _select(cnts, maxx, maxy, min_area):
             if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
                 
                 shape = _identify(c)
+                if shape == 'In/Out':
+                    leftmost =  None
+                    rightmost = None
+                    topmost = None
+                if shape != 'Oszillator':
+                    topmost = None
+              
                 (cX, cY) = _getCenterOfShape(c)
-                detectedShapes.append((shape, (cX, cY)))
+                detectedShapes.append((shape, (cX, cY), (leftmost, rightmost, topmost)))
                 detectedContours.append(c)
 
     return detectedShapes, detectedContours
