@@ -99,7 +99,8 @@ def _select(cnts, maxx, maxy, min_area):
                     topmost = None
               
                 (cX, cY) = _getCenterOfShape(c)
-                detectedShapes.append((shape, (cX, cY), (leftmost, rightmost, topmost)))
+                #detectedShapes.append((shape, (cX, cY), (leftmost, rightmost, topmost)))
+                detectedShapes.append((shape, (cX, cY)))
                 detectedContours.append(c)
 
     return detectedShapes, detectedContours
