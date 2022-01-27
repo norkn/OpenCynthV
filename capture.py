@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, request, jsonify
+from flask import Flask, render_template, Response, request, jsonify, redirect
 import cv2
 import numpy as np
 
@@ -7,9 +7,12 @@ import main
 app = Flask(__name__)
 
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(1)
+frame = None
 
 def gen_frames():  
+    global frame
+
     while True:
         success, frame = camera.read()  # read the camera frame
 
@@ -41,6 +44,12 @@ def testfn():
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/hold')
+def hold():
+    global frame
+    main.hold(frame)
+    return redirect('/')
 
 if __name__ == "__main__":
     app.run(debug=True)

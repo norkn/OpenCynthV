@@ -1,3 +1,4 @@
+from glob import glob
 import time
 
 import cv2
@@ -48,13 +49,14 @@ def drawShapes(frame_out, detected_shapes, detected_contours):
 
 def update(frame, params):
 
-    global last_time
-    global shapes, last_state_was_connected
+    global last_time, update_shapes_continuously
+    global shapes, shape_contours, last_state_was_connected
     global graph
 
     t = time.time()
 
-    shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
+    if update_shapes_continuously:
+        shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
 
     if t - last_time > 0.2:
 
@@ -83,9 +85,6 @@ last_state_was_connected = []
 r = 28
 modules_whiteout = None
 
-frame = None
-frame_to_register = None
-
 last_time = 0
 
 
@@ -99,8 +98,22 @@ paramNames = ['hue', 'hue thresh', 'min contour area', 'r', 'endpoint vicinity']
 params = [hue, hue_thresh, min_area, r, endpoint_thresh]
 paramRanges = [(0, 360), (0, 360), (0, 0.05), (0, 100), (0, 100)]
 
+update_shapes_continuously = True
+
 # ui = UI.UI(paramNames, paramRanges, params)
 # ##################################################
+
+def hold(frame):
+    global update_shapes_continuously
+    global params, graph
+    global shapes, shape_contours, last_state_was_connected
+    print('hold start')
+    shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
+    update_shapes_continuously = False
+
+    print('hold end')
+
+    return
 
 # def mouseCallback(event, x, y, flags, param):
 
