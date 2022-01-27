@@ -5,7 +5,8 @@ import cv2
 import imageToGraph as im2G
 import UI
 
-
+import Module_final as sh
+import connectionDetector as cd
 def drawTrace(frame_out, graph):
 
     if graph is not None:
@@ -15,7 +16,7 @@ def drawTrace(frame_out, graph):
             p = node
             q = graph[node]
 
-            frame_out = cv2.line(frame_out, p, q, color=(0, 0, 255), thickness=2)
+            frame_out = cv2.line(frame_out, p[1], q[1], color=(0, 0, 255), thickness=2)
 
 
 def drawShapes(frame_out, detected_shapes, detected_contours):
@@ -37,13 +38,19 @@ def drawShapes(frame_out, detected_shapes, detected_contours):
             cv2.putText(frame_out, str(shape), (cX - 20, cY - 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
 
+            color = [(120,130,90), (80, 120, 100), (110, 90, 120)]
+            for i in range(len(s[2])):
+                point = s[2][i]
+                if point is not None:
+                    cv2.circle(frame_out, (point[0], point[1]), 7, color[i], -1)
+
+
 
 def update(frame, params):
 
     global last_time
     global shapes, last_state_was_connected
-    global new_edges, graph
-    global modules_whiteout, frame_to_register
+    global graph
 
     t = time.time()
 
@@ -51,7 +58,8 @@ def update(frame, params):
 
     if t - last_time > 0.2:
 
-        graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, params[3], params[4], graph)
+
+        graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, int(params[3]), params[4], graph)
         
         last_time = t
 
@@ -101,6 +109,7 @@ paramRanges = [(0, 360), (0, 360), (0, 0.05), (0, 100), (0, 100)]
 #     global shapes, shape_contours, last_state_was_connected
 #     global frame_to_register, modules_whiteout
 
+
 #     if event == cv2.EVENT_LBUTTONDOWN:
 
 #         shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
@@ -121,10 +130,18 @@ paramRanges = [(0, 360), (0, 360), (0, 0.05), (0, 100), (0, 100)]
 
 #     ret, frame = video.read()
 
-#     update(frame, params)
+    # params[3] = int(params[3])
+    # update(frame, params)
 
-#     if cv2.waitKey(int(1000 / fps) + 1) != -1:
-#         break
+    # wo = im2G._getWhiteoutByHue(frame, params[0], params[1])
+    # #mods_preproc = sh._preprocess(frame)
+    # only_mods = im2G._applyWhiteout(wo, frame)
+    # only_cons = cd._preprocess(frame, wo, int(params[3]))
+    # cv2.imshow('only mods', only_mods)
+    # cv2.imshow('only_cons', only_cons)
+
+    # if cv2.waitKey(int(1000 / fps) + 1) != -1:
+    #     break
 
 # video.release()
 # cv2.destroyAllWindows()

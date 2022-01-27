@@ -41,22 +41,23 @@ def _isPointsClose(p, q):
 
     return np.linalg.norm(np.array(p) - np.array(q)) < _endpoint_threshold
 
+def _isShapesClose(shape_a, shape_b):
+    p = shape_a[1]
+    q = shape_b[1]
+    return _isPointsClose(p, q)
+
 def _endpointCloseTo(p):
-
     for e in _endpoints:
-
-        if _isPointsClose(p, e):
+        if _isPointsClose(p, e[1]): #_isShapesClose(p, e):
             return e
-
     return None
 
 def _isCloseToAnEndpoint(p):
 
     for e in _endpoints:
 
-        if _isPointsClose(p, e):
+        if _isShapesClose(p, e):
             return True
-
     return False
 
 
@@ -108,7 +109,7 @@ def _collectPotentialNextPoints(img, r, x, y):
     return intersections
 
 
-def _preprocess(img, whiteout):
+def _preprocess(img, whiteout, r):
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -125,6 +126,10 @@ def _preprocess(img, whiteout):
     img = cv2.add(img, whiteout)
 
     img = cv2.erode(img, kernel, iterations=2)
+
+    padded = np.ones((r + img.shape[0], r + img.shape[1]), np.uint8)
+    padded[r : r + img.shape[0], r : r + img.shape[1]] = img[:,:]
+    img = padded
 
     return img
 
@@ -266,8 +271,7 @@ def _chooseNextPoint(img, r, current_point, last_slope):
         current_point += last_slope
     else:
         # DEBUG_points = next_points
-        # next_points = _collectPotentialNextPoints(img, r, x, y)
-        last_slope = _closestSlope(last_slope, col_inj_result)  # next_points)
+        last_slope = _closestSlope(last_slope, col_inj_result)
         # DEBUG_VISUAL(DEBUG_points, img, r, current_point, last_slope)
         current_point += last_slope
 
@@ -281,19 +285,17 @@ class _Attempt:
         self.r = r
 
 
-def _traceConnection(img, x_start, y_start, r):
+def _traceConnection(img, starting_shape, r):
 
     start_time = time.time()
 
     attempts = [_Attempt(r)]  # Attempt(r+2), Attempt(r), Attempt(r-2)]
 
-    starting_point = np.array([x_start, y_start], dtype=np.int32)
+    starting_point = np.array([starting_shape[1][0], starting_shape[1][1]], dtype=np.int32)#np.array([x_start, y_start], dtype=np.int32)
     current_point = starting_point
-    #pad image
     last_slope = np.array([1, 0], dtype=np.int32)
 
-    while(not _isCloseToAnEndpoint(current_point) or _isPointsClose(current_point, starting_point)):
-
+    while(not _isCloseToAnEndpoint(("", tuple(current_point), None)) or _isPointsClose(current_point, starting_point)):
         if(time.time() - start_time > _TIMEOUT):
             print('TIMEOUT')
             return None
@@ -333,7 +335,7 @@ def isConnected(img, r, shape):
 
     global whiteout
 
-    img = _preprocess(img, whiteout)
+    img = _preprocess(img, whiteout, r)
     intersections = _collectPotentialNextPoints(img, r, shape[1][0], shape[1][1])
     
     return len(intersections) > 0
@@ -344,17 +346,19 @@ def traceConnections(img, shapesAndPoints, white_out, r, endpoint_threshold):
     global whiteout, _endpoints, _endpoint_threshold
 
     whiteout = white_out
-    _endpoints = [e[1] for e in shapesAndPoints]
+    _endpoints = shapesAndPoints#[e[1] for e in shapesAndPoints]
+    # _endpoints = [point for point in (connection_points[2] for connection_points in shapesAndPoints)]
+    
     _endpoint_threshold = endpoint_threshold
 
-    img_processed = _preprocess(img, whiteout)
+    img = _preprocess(img, whiteout, r)
 
     nodes = shapesAndPoints
 
     edges = set()
 
     for p in _endpoints:
-        result = _traceConnection(img_processed, p[0], p[1], r)
+        result = _traceConnection(img, p, r)
         if result is not None:
             result_edge = (tuple(result), p)
             if not result_edge in edges:
