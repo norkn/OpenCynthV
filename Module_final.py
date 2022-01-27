@@ -15,13 +15,13 @@ import cv2
 
 def _preprocess(img):
 
-    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
         cv2.THRESH_BINARY,149,4)
-    opening= cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+    opening= cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
 
     invert = cv2.bitwise_not(opening)
 
@@ -91,12 +91,12 @@ def _select(cnts, maxx, maxy, min_area):
             if leftmost[0] > 0 and rightmost[0] < (maxx-1) and topmost[1] > 0 and bottommost[1] < (maxy-1):
                 
                 shape = _identify(c)
-                if shape == 'In/Out':
-                    leftmost =  None
-                    rightmost = None
-                    topmost = None
-                if shape != 'Oszillator':
-                    topmost = None
+                # if shape == 'In/Out':
+                #     leftmost =  None
+                #     rightmost = None
+                #     topmost = None
+                # if shape != 'Oszillator':
+                #     topmost = None
               
                 (cX, cY) = _getCenterOfShape(c)
                 detectedShapes.append((shape, (cX, cY), (leftmost, rightmost, topmost)))
