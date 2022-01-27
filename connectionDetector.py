@@ -24,7 +24,7 @@ def DEBUG_VISUAL(slopes, img, r, current_point, last_slope):
                3, (255, 100, 90), thickness=-1)
 
     cv2.imshow('Connection Detection', new_img)
-    if cv2.waitKey(10) != -1:
+    if cv2.waitKey(50) != -1:
         if cv2.waitKey(10) != -1:
             cv2.destroyAllWindows()
             quit()
@@ -38,7 +38,7 @@ whiteout = None
 _TIMEOUT = 1
 
 def _isPointsClose(p, q):
-    print("points", p, q, "distance:", np.linalg.norm(np.array(p) - np.array(q)))
+
     return np.linalg.norm(np.array(p) - np.array(q)) < _endpoint_threshold
 
 def _isShapesClose(shape_a, shape_b):
@@ -53,9 +53,9 @@ def _endpointCloseTo(p):
     return None
 
 def _isCloseToAnEndpoint(p):
-    print("num endpoints:",len(_endpoints))
+
     for e in _endpoints:
-        print(e, p)
+
         if _isShapesClose(p, e):
             return True
     return False
@@ -293,11 +293,9 @@ def _traceConnection(img, starting_shape, r):
 
     starting_point = np.array([starting_shape[1][0], starting_shape[1][1]], dtype=np.int32)#np.array([x_start, y_start], dtype=np.int32)
     current_point = starting_point
-    print("START:", starting_point, starting_shape)
     last_slope = np.array([1, 0], dtype=np.int32)
 
     while(not _isCloseToAnEndpoint(("", tuple(current_point), None)) or _isPointsClose(current_point, starting_point)):
-        print(not _isCloseToAnEndpoint(("", tuple(current_point), None)), _isPointsClose(current_point, starting_point))
         if(time.time() - start_time > _TIMEOUT):
             print('TIMEOUT')
             return None
@@ -350,7 +348,6 @@ def traceConnections(img, shapesAndPoints, white_out, r, endpoint_threshold):
     whiteout = white_out
     _endpoints = shapesAndPoints#[e[1] for e in shapesAndPoints]
     # _endpoints = [point for point in (connection_points[2] for connection_points in shapesAndPoints)]
-    print("ENDPOINTS: ", _endpoints)
     
     _endpoint_threshold = endpoint_threshold
 

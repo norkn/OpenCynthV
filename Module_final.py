@@ -15,13 +15,13 @@ import cv2
 
 def _preprocess(img):
 
-    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
+    kernel=cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
         cv2.THRESH_BINARY,149,4)
-    opening= cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
+    opening= cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
 
     invert = cv2.bitwise_not(opening)
 

@@ -89,7 +89,7 @@ hue = 0
 hue_thresh = 100
 min_area = 0.008
 r = 28
-endpoint_thresh = 50
+endpoint_thresh = 30
 
 paramNames = ['hue', 'hue thresh', 'min contour area', 'r', 'endpoint vicinity']
 params = [hue, hue_thresh, min_area, r, endpoint_thresh]

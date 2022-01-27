@@ -91,6 +91,4 @@ def updateConnections(frame, hue, hue_threshold, shapes, last_state_was_connecte
     nodes, _new_edges = cd.traceConnections(frame, shapes_to_trace, modules_whiteout, r, endpoint_vicinity)
     graph = _updateGraph(graph, disconnected_nodes, _new_edges)
 
-    print("GRAPH:",graph)
-
     return graph
