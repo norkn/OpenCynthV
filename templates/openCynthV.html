@@ -2,8 +2,9 @@
     <title>OpenCynthV</title>
     <head>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="{{ url_for('static', filename= 'js/siteController.js') }}"></script>
-        <script src="{{ url_for('static', filename= 'js/midi.js') }}"></script>
+        
     </head>
     <body>
 
@@ -16,13 +17,26 @@
         <div class="modulesSetup" height="50%">
             <p1 id= "test">Hier steht das Script</p1>
             <button id= "button" onclick="button()">Turn on the light</button>
-        </div>
-        <div class="changeParams">
-            <input type="range" min="0" max="100" value="50" class="slider" id="attackSlider">
-
+            <button id= "button2" onclick="button2()">Send Graph</a></button>
+            <input type="button" id="btnHold" value="HOLD">
         </div>
         
+        <div class="changeParams">
+            
+                   
 
+            <input type="range" min="0" max="100" value="10" class="slider" id="gainSlider">
+            <span id="gainOutput">1.0 dB</span>
+        
+
+        
+            <input type="range" min="0" max="100" value="50" class="slider" id="panningSlider">
+            <span id="panningOutput">0 LR</span>
+        
+
+            
+        
+        </div>
     </body>
 
 </html>

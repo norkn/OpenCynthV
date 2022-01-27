@@ -1,7 +1,8 @@
+import json
 from flask import Flask, render_template, Response, request, jsonify
 import cv2
 import numpy as np
-
+import imageToGraph as g
 import main
 
 app = Flask(__name__)
@@ -27,16 +28,21 @@ def gen_frames():
 def index():
     return render_template('OpenCynthV.html')
 
-@app.route('/test', methods=['GET', 'POST'])
-def testfn():
-    # GET request
-    if request.method == 'GET':
-        message = {'greeting':'Hello from Flask!'}
-        return jsonify(message)  # serialize and use JSON headers
-    # POST request
+@app.route('/getGraph', methods=['GET'])
+def getGraph():
+    print(json.dumps(main.getGraph))
+    return json.dumps(main.getGraph)
+    
+    
+    
+@app.route('/holdContours', methods=['POST'])
+def holdContours():
     if request.method == 'POST':
-        print(request.get_json())  # parse as JSON
-        return 'Sucesss', 200
+        #main.holdContours()
+        return "OK"
+    else:
+        return "NO OK"
+    
 
 @app.route('/video_feed')
 def video_feed():

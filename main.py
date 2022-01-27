@@ -35,7 +35,7 @@ def drawShapes(frame_out, detected_shapes, detected_contours):
 
             cv2.circle(frame_out, (cX, cY), 7, (255, 255, 255), -1)
             cv2.putText(frame_out, str(shape), (cX - 20, cY - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
 
 
 def update(frame, params):
@@ -44,15 +44,18 @@ def update(frame, params):
     global shapes, last_state_was_connected
     global new_edges, graph
     global modules_whiteout, frame_to_register
+    global i
 
-    t = time.time()
-
+    #if i == 0:
+               
     shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
-
+    
+    t = time.time()
+    
     if t - last_time > 0.2:
 
-        graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, params[3], params[4], graph)
-        
+        #graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, params[3], params[4], graph)
+            
         last_time = t
 
 
@@ -60,13 +63,31 @@ def update(frame, params):
 
     drawShapes(frame_out, shapes, shape_contours)
     drawTrace(frame_out, graph)
-
+    
     return frame_out
+    
     #cv2.imshow('original', frame_out)
 
+# def holdContours():
+#     global i
+#     i = 1+i
+
+def getGraph():
+    global graph 
+    graph =  {("WaveShaping", (462, 375)) : ("Oszillator", (237, 392)),
+            ("Oszillator", (237, 392)) : ("WaveShaping", (462, 375)),
+            ("In/Out", (518, 170)) : ("In/Out", (518, 170)),
+            ("StereoPanner", (258, 192)): ("In/Out", (518, 170))} 
+    return graph
+    
+    
 
 ####################GLOBALS#######################
-graph = {}
+graph = {("WaveShaping", (462, 375)) : ("Oszillator", (237, 392)),
+        ("Oszillator", (237, 392)) : ("WaveShaping", (462, 375)),
+        ("In/Out", (518, 170)) : ("In/Out", (518, 170)),
+        ("StereoPanner", (258, 192)): ("In/Out", (518, 170))}
+
 shapes = []
 shape_contours = []
 new_edges = None
@@ -79,7 +100,7 @@ frame = None
 frame_to_register = None
 
 last_time = 0
-
+i=0
 
 hue = 0
 hue_thresh = 100
