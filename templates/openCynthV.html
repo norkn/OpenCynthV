@@ -1,29 +1,48 @@
 <html>
-    <title>OpenCynthV</title>
-    <head>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css') }}">
-        <script src="{{ url_for('static', filename= 'js/siteController.js') }}"></script>
-        <script src="{{ url_for('static', filename= 'js/midi.js') }}"></script>
-    </head>
-    <body>
 
-        
+
+    <title>OpenCynthV</title>
+
+
+    <head>
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css') }}">
+
+    </head>
+
+
+    <body>
 
         <div class="cameraView">
             <img src="{{ url_for('video_feed') }}">
-
         </div>
+    
         <div class="modulesSetup" height="50%">
-            <p1 id= "test">Hier steht das Script</p1>
-            <button id= "button" onclick="button()">Turn on the light</button>
             <button id= "Hold" onclick="location.href='/hold';">Hold</button>
         </div>
+
         <div class="changeParams">
             <input type="range" min="0" max="100" value="50" class="slider" id="attackSlider">
 
         </div>
-        
+
+        <script>
+            function update(){
+
+               fetch('/update')
+                    .then(()=>{
+                        fetch('/get_graph')
+                            .then((g)=>{ 
+                                //build webaudio graph
+                                console.log(g); 
+                            });
+               });
+            }
+
+            var intervalId = setInterval(update, 100);    
+        </script>
 
     </body>
+
 
 </html>

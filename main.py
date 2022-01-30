@@ -1,14 +1,11 @@
-from glob import glob
 import time
 
 import cv2
 
 import imageToGraph as im2G
-import UI
 
-import Module_final as sh
-import connectionDetector as cd
-def drawTrace(frame_out, graph):
+
+def _drawTrace(frame, graph):
 
     if graph is not None:
 
@@ -17,16 +14,16 @@ def drawTrace(frame_out, graph):
             p = node
             q = graph[node]
 
-            frame_out = cv2.line(frame_out, p[1], q[1], color=(0, 0, 255), thickness=2)
+            frame = cv2.line(frame, p[1], q[1], color=(0, 0, 255), thickness=2)
 
 
-def drawShapes(frame_out, detected_shapes, detected_contours):
+def _drawShapes(frame, detected_shapes, detected_contours):
 
     if detected_contours is not None:
 
         for c in detected_contours:
             
-            cv2.drawContours(frame_out, [c], -1, (50, 240, 240), 2)
+            cv2.drawContours(frame, [c], -1, (50, 240, 240), 2)
 
     if detected_shapes is not None:
 
@@ -35,44 +32,60 @@ def drawShapes(frame_out, detected_shapes, detected_contours):
             shape = s[0]
             cX, cY = s[1]
 
-            cv2.circle(frame_out, (cX, cY), 7, (255, 255, 255), -1)
-            cv2.putText(frame_out, str(shape), (cX - 20, cY - 20),
+            cv2.circle(frame, (cX, cY), 7, (255, 255, 255), -1)
+            cv2.putText(frame, str(shape), (cX - 20, cY - 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), )
 
             color = [(120,130,90), (80, 120, 100), (110, 90, 120)]
             for i in range(len(s[2])):
                 point = s[2][i]
                 if point is not None:
-                    cv2.circle(frame_out, (point[0], point[1]), 7, color[i], -1)
+                    cv2.circle(frame, (point[0], point[1]), 7, color[i], -1)
 
 
+def hold(frame):
+    global update_shapes_continuously
+    global params, graph
+    global shapes, shape_contours, last_state_was_connected
+    
+    shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
+    update_shapes_continuously = False
 
-def update(frame, params):
+    return
+
+
+def updateGraph(frame, params):
 
     global last_time, update_shapes_continuously
     global shapes, shape_contours, last_state_was_connected
     global graph
 
-    t = time.time()
-
     if update_shapes_continuously:
         shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
 
+    t = time.time()
+
     if t - last_time > 0.2:
-
-
         graph = im2G.updateConnections(frame, params[0], params[1], shapes, last_state_was_connected, int(params[3]), params[4], graph)
-        
         last_time = t
 
+    return graph
+
+
+def drawContoursAndConnections(frame):
+
+    global shapes, shape_contours, graph
+
+    shapes_in = shapes.copy()
+    shape_contours_in = shape_contours.copy()
+    graph_in = graph.copy()
 
     frame_out = frame.copy()
 
-    drawShapes(frame_out, shapes, shape_contours)
-    drawTrace(frame_out, graph)
+    _drawShapes(frame_out, shapes_in, shape_contours_in)
+    _drawTrace(frame_out, graph_in)
 
     return frame_out
-    #cv2.imshow('original', frame_out)
 
 
 ####################GLOBALS#######################
@@ -86,7 +99,6 @@ r = 28
 modules_whiteout = None
 
 last_time = 0
-
 
 hue = 0
 hue_thresh = 100
@@ -102,18 +114,6 @@ update_shapes_continuously = True
 
 # ui = UI.UI(paramNames, paramRanges, params)
 # ##################################################
-
-def hold(frame):
-    global update_shapes_continuously
-    global params, graph
-    global shapes, shape_contours, last_state_was_connected
-    print('hold start')
-    shapes, shape_contours, last_state_was_connected = im2G.registerModules(frame, params[0], params[1], params[2], graph)
-    update_shapes_continuously = False
-
-    print('hold end')
-
-    return
 
 # def mouseCallback(event, x, y, flags, param):
 

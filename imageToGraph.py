@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
 
-import Module_final as sh
+import moduleDetector as sh
 import connectionDetector as cd
-import utils
 
 
 def _getWhiteoutByHue(img, hue, threshold):
