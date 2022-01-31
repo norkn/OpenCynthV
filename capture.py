@@ -54,33 +54,8 @@ def hold():
 
 @app.route('/get_graph')
 def getGraph():
-    global graph
-
-    out_graph = {}
-
-    if graph is not None:
-        for key in graph.keys():
-            out_graph[str(key)] = str(graph[key])
-    
-    return jsonify(json.loads(jsonpickle.encode(out_graph)))
+    global graph    
+    return jsonify(json.loads(jsonpickle.encode(graph)))
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
-# @app.route('/test', methods=['GET', 'POST'])
-# def testfn():
-#     # GET request
-#     if request.method == 'GET':
-#         m = Module("osc", (1,2), [(0,0), (20,20)])
-#         m2 = Module("osc", (12,2), [(0,0), (20,20)])
-
-#         c  = Connection(m,m2)
-
-#         return jsonify(json.loads(jsonpickle.encode(c)))#jsonify(c)  # serialize and use JSON headers
-#     # POST request
-#     if request.method == 'POST':
-#         print(request.get_json())  # parse as JSON
-#         return 'Sucesss', 200

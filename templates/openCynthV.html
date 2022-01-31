@@ -32,9 +32,13 @@
                fetch('/update')
                     .then(()=>{
                         fetch('/get_graph')
-                            .then((g)=>{ 
+                            .then((response)=>{ 
                                 //build webaudio graph
-                                console.log(g); 
+                                response.json().then((graph_json) => {
+                                    console.log(graph_json);
+                                    // graph = JSON.parse(graph_json);
+                                    // console.log(graph);
+                                });
                             });
                });
             }
