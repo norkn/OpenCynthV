@@ -7,6 +7,8 @@
     <head>
 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        
 
     </head>
 
@@ -19,14 +21,42 @@
     
         <div class="modulesSetup" height="50%">
             <button id= "Hold" onclick="location.href='/hold';">Hold</button>
+            <button id= "Graph" onclick=logGraph()>Graph</button>
         </div>
 
-        <div class="changeParams">
-            <input type="range" min="0" max="100" value="50" class="slider" id="attackSlider">
+        <div class="changeParams"> 
+            
+            <input type="range" min="0" max="100" value="50" class="slider" id="masterGainSlider">
+            <span id="masterGainOutput">Volume</span>
+            
+            <div class="oscillatorParams">Oszillatoren: 
+
+                <input type="range" min="-22050" max="22050" value="440" class="slider" id="osciFrequencySlider">
+                <span id="osciFrequencyOutput">440 Hz</span>
+
+                <select id="osciSelectList">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="triangle">Triangle</option>                    
+                </select>
+
+            </div>
+
+            <div class="panningParams">Panning: 
+                <input type="range" min="0" max="100" value="50" class="slider" id="panningSlider">
+                <span id="panningOutput">0 LR</span>
+            </div>
+
+            <div id="distortionParams"> Distortion
+                <input type="range" min="0" max="100" value="0" class="slider" id="distortionSlider">
+                <span id="distortionOutput">0</span>
+            </div>
 
         </div>
 
-        <script>
+        <!-- <script>
+            let finalGraph
             function update(){
 
                fetch('/update')
@@ -35,7 +65,9 @@
                             .then((response)=>{ 
                                 //build webaudio graph
                                 response.json().then((graph_json) => {
+                                    console.log(JSON.stringify(graph_json));
                                     console.log(graph_json);
+                                    finalGraph = graph_json;
                                     // graph = JSON.parse(graph_json);
                                     // console.log(graph);
                                 });
@@ -44,7 +76,9 @@
             }
 
             var intervalId = setInterval(update, 100);    
-        </script>
+        </script> -->
+
+        <script src="{{ url_for('static', filename= 'js/audioGraphController.js') }}"></script>
 
     </body>
 
