@@ -19,18 +19,14 @@ function update(){
                     });
                 });
     });
-}
+};
 
 var intervalId = setInterval(update, 100);    
 
 
 function logGraph(){
     console.log(this.finalGraph);
-}
-
-
-
-
+};
 
 
 
