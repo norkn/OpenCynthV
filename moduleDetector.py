@@ -1,17 +1,7 @@
-# Quelle: https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
-# Ergänzende Quelle wg division by zero error (aus Skript): https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/ 
-#https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html (wg threshold anpassung)
-# weitere: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
-#https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html
-
-#https://dev.to/simarpreetsingh019/detecting-geometrical-shapes-in-an-image-using-opencv-4g72
-# https://docs.opencv.org/3.4/d1/d32/tutorial_py_contour_properties.html
-
 # import the necessary packages
 
 import imutils
 import cv2
-
 
 def _preprocess(img):
 
@@ -29,7 +19,8 @@ def _preprocess(img):
 
     
 def _identify(c):
-
+    # Quelle: https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
+    # Anstelle von Geometrischen Formen werden Module des Synthesizers zugewiesen
     # initialize the shape name and approximate the contour
     shape = "unidentified"
     epsilon = 0.03*cv2.arcLength(c,True)
@@ -59,7 +50,7 @@ def _identify(c):
 
 
 def _getCenterOfShape(c):
-    
+    # https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
     # compute the center of the contour
     M = cv2.moments(c)
     if M["m00"] != 0:
@@ -82,7 +73,7 @@ def _select(cnts, maxx, maxy, min_area):
         area=cv2.contourArea(c)
         
         if area / (maxx * maxy) > min_area:
-
+            # https://docs.opencv.org/3.4/d1/d32/tutorial_py_contour_properties.html
             leftmost = tuple(c[c[:,:,0].argmin()][0])
             rightmost = tuple(c[c[:,:,0].argmax()][0])
             topmost = tuple(c[c[:,:,1].argmin()][0])
